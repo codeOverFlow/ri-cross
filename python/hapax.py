@@ -2,8 +2,6 @@ from os import listdir
 from os.path import isfile, join
 from sys import argv
 
-#Usage : python hapax.py path/to/dir
-
 def hapax(words):
   res={}
   
@@ -18,9 +16,8 @@ def hapax(words):
 pt = argv[1]
 for f in listdir(pt):
   if isfile(join(pt, f)):
-    words=hapax([l.replace('\n', '').lower() for l in open(join(pt, f)).read() if l != '\n'])
+    words=hapax([e for line in [l.replace('\n', '').lower() for l in open(join(pt, f)).readlines() if l != '\n'] for e in line.split(' ')])
     print f + ';'+' '.join(words)
-    
     
 #Format resultats pour evaluation:
 # nomFichierFr [tab] X [tab] nomFichierEn [tab] Y [tab] Score d'appariement [tab] nomRun
