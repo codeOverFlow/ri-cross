@@ -1,16 +1,11 @@
 #include <iostream>
 #include <fstream>
-#include <string>
-#include <map>
-#include <set>
 #include <algorithm>
+#include "types.hpp"
 
 #include <stdlib.h>
 #include <dirent.h>
 #include <cstring>
-
-typedef std::map<std::string, bool> appax_map;
-typedef std::map<std::string, appax_map> appax_file;
 
 /**
  * print the content of an appax_file
@@ -18,29 +13,29 @@ typedef std::map<std::string, appax_map> appax_file;
 void print_map(appax_file const& map) {
    for (auto const& t_s_m : map) {
       std::cout << "key: " << t_s_m.first << std::endl;
-      for (auto const& t_s_b : t_s_m.second) {
-         std::cout << "\t" << t_s_b.first 
-            << " -> " << t_s_b.second << std::endl;
+      for (auto const& s : t_s_m.second) {
+         std::cout << "\t" << s << " -> " << s << std::endl;
       }
    }
    std::cout << std::endl << std::endl;
 }
 
 void save_map(appax_file& map, char* dirname) {
-   std::ofstream save_file ("save/appax_per_file.txt");
+   std::string dn(dirname);
+   dn = dn.substr(dn.size() - 3, 2);
+   std::ofstream save_file (std::string("save/appax_per_file_") + dn 
+         + std::string(".txt"));
 
    for (auto const& kv : map) {
       save_file << kv.first << ";";
-      for (auto const& sb : kv.second)
-         save_file << sb.first << " ";
+      for (auto const& s : kv.second)
+         save_file << s << " ";
       save_file << std::endl;
    }
    save_file.close();
 
 
    // serialize it
-   std::string dn(dirname);
-   dn = dn.substr(dn.size() - 3, 2);
    std::string name(std::string("save/") + dn + std::string(".bin"));
    std::cout << "Serialize: " << name << "..." 
       << std::endl;
@@ -63,18 +58,17 @@ void read_dir(char* dirname) {
    dir = opendir(dirname);
 
    int i = 1;
+   int k = 1;
 
 
    while ((pdir = readdir(dir))) {
       // take care of '..' and '.'
       if (pdir->d_type == DT_DIR) continue;
       
-      std::cout << "\r" << i;
-
       // load the file
       std::string name = std::string(pdir->d_name);
       //std::cout << "\tRead the file: " << name << std::endl;
-      m[name] = appax_map();
+      m[name] = appax_set();
       std::ifstream file(dirname + name);
       std::string a;
 
@@ -82,7 +76,14 @@ void read_dir(char* dirname) {
       std::set<std::string> trash;
 
       // store the map of the file in a pointer
-      appax_map* ptmp = &m[name];
+      appax_set* ptmp = &m[name];
+
+      if (k == 1000) {
+         std::cout << "\r" << k*i;
+         std::cout.flush();
+         k = 1;
+         i++;
+      }
 
       while (file >> a) {
          // make it lowercase
@@ -94,11 +95,10 @@ void read_dir(char* dirname) {
             trash.insert(a);
          }
          else {
-            if (ptmp->find(a) == ptmp->end())
-               (*ptmp)[a] = true;
+            ptmp->insert(a);
          }
       }
-      i++;
+      k++;
    }
 
    // save the map
