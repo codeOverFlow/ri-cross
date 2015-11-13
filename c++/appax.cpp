@@ -26,6 +26,7 @@ void save_map(appax_file& map, char* dirname) {
    std::ofstream save_file (std::string("save/appax_per_file_") + dn 
          + std::string(".txt"));
 
+   save_file << map.size() << std::endl;
    for (auto const& kv : map) {
       save_file << kv.first << ";";
       for (auto const& s : kv.second)
@@ -37,13 +38,6 @@ void save_map(appax_file& map, char* dirname) {
 
    // serialize it
    std::string name(std::string("save/") + dn + std::string(".bin"));
-   std::cout << "Serialize: " << name << "..." 
-      << std::endl;
-   std::ofstream of(name, std::ios::binary);
-
-   of.write((char*)&map, sizeof(map));
-   of.close();
-   std::cout << "Done." << std::endl;
 }
 
 void read_dir(char* dirname) {
@@ -57,16 +51,13 @@ void read_dir(char* dirname) {
    std::cout << "Open the dir: " << dirname << std::endl << std::endl;
    dir = opendir(dirname);
 
-   int i = 1;
-   int k = 1;
-
-
    while ((pdir = readdir(dir))) {
       // take care of '..' and '.'
       if (pdir->d_type == DT_DIR) continue;
-      
+
       // load the file
       std::string name = std::string(pdir->d_name);
+      //std::cout << name << std::endl;
       //std::cout << "\tRead the file: " << name << std::endl;
       m[name] = appax_set();
       std::ifstream file(dirname + name);
@@ -77,13 +68,6 @@ void read_dir(char* dirname) {
 
       // store the map of the file in a pointer
       appax_set* ptmp = &m[name];
-
-      if (k == 1000) {
-         std::cout << "\r" << k*i;
-         std::cout.flush();
-         k = 1;
-         i++;
-      }
 
       while (file >> a) {
          // make it lowercase
@@ -98,7 +82,6 @@ void read_dir(char* dirname) {
             ptmp->insert(a);
          }
       }
-      k++;
    }
 
    // save the map
