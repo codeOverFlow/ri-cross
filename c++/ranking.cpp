@@ -57,7 +57,8 @@ void do_in_thread(appax_file* en, appax_file* fr, appariement_map* appariement
    int max = 0;
    std::string save_fr = "";
    for (auto it = ite_b; it != ite_e; ++it) {
-      std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt++ << std::endl;
+      if(cpt % 100 == 0)
+        std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt++ << std::endl;
       max = 0;
       save_fr = "";
       for (auto const& v : *fr) {
