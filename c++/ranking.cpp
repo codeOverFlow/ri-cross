@@ -22,17 +22,6 @@ void save_data(appariement_map const& appar, std::string const& name) {
 }
 
 
-void save_inverse_data(inverse_t const& inv, std::string const& name) {
-   std::ofstream file(name);
-   for (auto const& t : inv) {
-      for (auto const& tt : t.second) {
-         file << t.first << " " << tt.first << " " << tt.second << std::endl;
-      }
-      file << "::end:: ::end:: ::end::" << std::endl;
-   }
-   file.close();
-}
-
 int nb_common(appax_set const* s1, appax_set const* s2) {
    int common = 0;
    if (s1->size() <= s2->size()) {
