@@ -6,9 +6,11 @@
 #include <algorithm>
 #include <cstdlib>
 #include <thread>
+#include <mutex>
 
 #include <cmath>
 
+std::mutex sher;
 
 void save_data(appariement_map const& appar, std::string const& name) {
    std::ofstream file(name);
@@ -57,7 +59,9 @@ void do_in_thread(appax_file* en, appax_file* fr, appariement_map* appariement
             max = score;
          }
       }
+      sher.lock();
       (*appariement)[save_fr][*it] = max;
+      sher.unlock();
    }
 }
 
