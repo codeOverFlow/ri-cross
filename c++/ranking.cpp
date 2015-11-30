@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <thread>
 #include <mutex>
+#include <list>
 
 #include <cmath>
 
@@ -33,25 +34,43 @@ int nb_common(appax_set const* s1, appax_set const* s2) {
 void do_in_thread(appax_file* en, appax_file* fr, std::ofstream* file
 , str_v_t::iterator ite_b, str_v_t::iterator ite_e) {
    int cpt = 1;
-   int max = 0;
-   std::string save_fr = "";
+   std::list<int> max(10, 0);
+   std::list<std::string> save_fr(10, "");
    for (str_v_t::iterator it = ite_b; it < ite_e; ++it) {
       if((++cpt) % 100 == 0)
         std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt++ << std::endl;
-      max = 0;
-      save_fr = "";
+      max = std::list<int>(10, 0);
+      save_fr = std::list<std::string>(10, "");
       for (auto const& v : *fr) {
          int score = nb_common(&(v.second), &((*en)[*it]));
-         if (score > 0 && score > max) {
-            save_fr = v.first;
-            max = score;
+         std::list<int>::iterator itMax = max.begin();
+         std::list<std::string>::iterator itSave = save_fr.begin();
+         for(itMax; itMax != max.end(); ++itMax)
+         {
+            if(score > 0 && score > *itMax)
+            {
+              max.insert(itMax, score);
+              save_fr.insert(itSave, v.first);
+              
+              max.pop_back();
+              save_fr.pop_back();
+              break;
+            }
+            
+            ++itSave;
          }
       }
       sher.lock();
 		if (it != ite_b) {
 			(*en).erase(*it);
 		}
-		(*file) << save_fr << " " << (*it) << " " << max << std::endl;
+		std::list<int>::iterator itMax = max.begin();
+    std::list<std::string>::iterator itSave = save_fr.begin();
+		for(itMax; itMax != max.end(); ++itMax)
+		{
+		  (*file) << *itSave << " " << (*it) << " " << *itMax << std::endl;
+		  ++itSave;
+	  }
       sher.unlock();
    }
   std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt << std::endl;
@@ -85,7 +104,7 @@ int main(int argc, char** argv) {
 
       std::string w;
       while (iss >> w) {
-         //fr[doc].insert(w);
+         fr[doc].insert(w);
       }
    }
    file_fr.close();
@@ -110,7 +129,7 @@ int main(int argc, char** argv) {
 
       std::string w;
       while (iss >> w) {
-         //en[doc].insert(w);
+         en[doc].insert(w);
       }
    }
    file_en.close();
