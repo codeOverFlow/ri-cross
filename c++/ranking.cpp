@@ -32,48 +32,45 @@ int nb_common(appax_set const* s1, appax_set const* s2) {
 
 
 void do_in_thread(appax_file* en, appax_file* fr, std::ofstream* file
-, str_v_t::iterator ite_b, str_v_t::iterator ite_e) {
+      , str_v_t::iterator ite_b, str_v_t::iterator ite_e) {
    int cpt = 1;
    std::list<int> max(10, 0);
    std::list<std::string> save_fr(10, "");
    for (str_v_t::iterator it = ite_b; it < ite_e; ++it) {
       if((++cpt) % 100 == 0)
-        std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt++ << std::endl;
+         std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt++ << std::endl;
       max = std::list<int>(10, 0);
       save_fr = std::list<std::string>(10, "");
       for (auto const& v : *fr) {
          int score = nb_common(&(v.second), &((*en)[*it]));
-         std::list<int>::iterator itMax = max.begin();
          std::list<std::string>::iterator itSave = save_fr.begin();
-         for(itMax; itMax != max.end(); ++itMax)
+         for(auto itMax = max.begin(); itMax != max.end(); ++itMax)
          {
             if(score > 0 && score > *itMax)
             {
-              max.insert(itMax, score);
-              save_fr.insert(itSave, v.first);
-              
-              max.pop_back();
-              save_fr.pop_back();
-              break;
+               max.insert(itMax, score);
+               save_fr.insert(itSave, v.first);
+
+               max.pop_back();
+               save_fr.pop_back();
+               break;
             }
-            
+
             ++itSave;
          }
       }
       sher.lock();
-		if (it != ite_b) {
-			(*en).erase(*it);
-		}
-		std::list<int>::iterator itMax = max.begin();
-    std::list<std::string>::iterator itSave = save_fr.begin();
-		for(itMax; itMax != max.end(); ++itMax)
-		{
-		  (*file) << *itSave << " " << (*it) << " " << *itMax << std::endl;
-		  ++itSave;
-	  }
+      if (it != ite_b) {
+         (*en).erase(*it);
+      }
+      std::list<std::string>::iterator itSave = save_fr.begin();
+      for(auto itMax = max.begin(); itMax != max.end(); ++itMax)
+      {
+         (*file) << *itSave << " " << (*it) << " " << *itMax << std::endl;
+         ++itSave;
+      }
       sher.unlock();
    }
-  std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt << std::endl;
 }
 
 
@@ -141,13 +138,13 @@ int main(int argc, char** argv) {
 
    // make appariement
    std::cout << "start scoring" << std::endl;
-	system("mkdir save/");
+   int ret = system("mkdir save/");
    std::ofstream file("save/appariements_fr-en.txt");
    for (auto k = 0; k < nb_thread; ++k) {
-   threads.push_back(std::thread(do_in_thread, &en, &fr, &file
-         , en_filename.begin()+(k*per_parts)
-         ,(k == nb_thread-1 ? en_filename.end() 
-            : en_filename.begin()+((k+1)*per_parts))));
+      threads.push_back(std::thread(do_in_thread, &en, &fr, &file
+               , en_filename.begin()+(k*per_parts)
+               ,(k == nb_thread-1 ? en_filename.end() 
+                  : en_filename.begin()+((k+1)*per_parts))));
    }
 
    for (auto k = 0; k < nb_thread; ++k)
