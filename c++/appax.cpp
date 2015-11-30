@@ -74,13 +74,15 @@ void read_dir(char* dirname) {
          std::transform(a.begin(), a.end(), a.begin(), ::tolower);
 
          // erase  and save in trash if occurs at least twice
-         if (ptmp->find(a) != ptmp->end()) {
-            ptmp->erase(a);
-            trash.insert(a);
-         }
-         else {
-            ptmp->insert(a);
-         }
+			if (a.size() > 3) {
+         	if (ptmp->find(a) != ptmp->end()) {
+            	ptmp->erase(a);
+            	trash.insert(a);
+         	}
+         	else {
+           		ptmp->insert(a);
+         	}
+			}
       }
    }
 
