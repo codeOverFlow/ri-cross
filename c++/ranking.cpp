@@ -12,18 +12,6 @@
 
 std::mutex sher;
 
-void save_data(appariement_map const& appar, std::string const& name) {
-   std::ofstream file(name);
-   for (auto const& t : appar) {
-      for (auto const& tt : t.second) {
-         file << t.first << " " << tt.first << " " << tt.second << std::endl;
-      }
-      file << "::end:: ::end:: ::end::" << std::endl;
-   }
-   file.close();
-}
-
-
 int nb_common(appax_set const* s1, appax_set const* s2) {
    int common = 0;
    if (s1->size() <= s2->size()) {
@@ -42,14 +30,14 @@ int nb_common(appax_set const* s1, appax_set const* s2) {
 }
 
 
-void do_in_thread(appax_file* en, appax_file* fr, appariement_map* appariement
-      , str_v_t::iterator ite_b, str_v_t::iterator ite_e) {
+void do_in_thread(appax_file* en, appax_file* fr, std::ofstream* file
+, str_v_t::iterator ite_b, str_v_t::iterator ite_e) {
    int cpt = 1;
    int max = 0;
    std::string save_fr = "";
-   for (auto it = ite_b; it != ite_e; ++it) {
+   for (str_v_t::iterator it = ite_b; it < ite_e; ++it) {
       if((++cpt) % 100 == 0)
-        std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt << std::endl;
+        std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt++ << std::endl;
       max = 0;
       save_fr = "";
       for (auto const& v : *fr) {
@@ -60,15 +48,18 @@ void do_in_thread(appax_file* en, appax_file* fr, appariement_map* appariement
          }
       }
       sher.lock();
-      (*appariement)[save_fr][*it] = max;
+		if (it != ite_b) {
+			(*en).erase(*it);
+		}
+		(*file) << save_fr << " " << (*it) << " " << max << std::endl;
       sher.unlock();
    }
+  std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt << std::endl;
 }
 
 
 int main(int argc, char** argv) {   
    // read files
-
    appax_file fr;
    appax_file en;
 
@@ -90,11 +81,11 @@ int main(int argc, char** argv) {
       std::string doc = line.substr(0, pos);
       // get other
       std::string other = line.substr(pos+1, line.size());
-      std::istringstream iss(other, std::istringstream::in);
+      std::istringstream iss(line, std::istringstream::in);
 
       std::string w;
       while (iss >> w) {
-         fr[doc].insert(w);
+         //fr[doc].insert(w);
       }
    }
    file_fr.close();
@@ -119,7 +110,7 @@ int main(int argc, char** argv) {
 
       std::string w;
       while (iss >> w) {
-         en[doc].insert(w);
+         //en[doc].insert(w);
       }
    }
    file_en.close();
@@ -131,8 +122,10 @@ int main(int argc, char** argv) {
 
    // make appariement
    std::cout << "start scoring" << std::endl;
+	system("mkdir save/");
+   std::ofstream file("save/appariements_fr-en.txt");
    for (auto k = 0; k < nb_thread; ++k) {
-   threads.push_back(std::thread(do_in_thread, &en, &fr, &appariement
+   threads.push_back(std::thread(do_in_thread, &en, &fr, &file
          , en_filename.begin()+(k*per_parts)
          ,(k == nb_thread-1 ? en_filename.end() 
             : en_filename.begin()+((k+1)*per_parts))));
@@ -140,9 +133,6 @@ int main(int argc, char** argv) {
 
    for (auto k = 0; k < nb_thread; ++k)
       threads.at(k).join();
-
-   std::cout << "save appariement" << std::endl;
-   save_data(appariement, "save/appariements_fr-en.txt");
 
    return EXIT_SUCCESS;
 }
