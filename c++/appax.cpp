@@ -50,11 +50,13 @@ void read_dir(char* dirname) {
 
    std::cout << "Open the dir: " << dirname << std::endl << std::endl;
    dir = opendir(dirname);
+   int cpt = 1;
 
    while ((pdir = readdir(dir))) {
       // take care of '..' and '.'
       if (pdir->d_type == DT_DIR) continue;
 
+      std::cout << (cpt++) << std::endl;
       // load the file
       std::string name = std::string(pdir->d_name);
       //std::cout << name << std::endl;
