@@ -31,7 +31,7 @@ int nb_common(appax_set const* s1, appax_set const* s2) {
 }
 
 
-void do_in_thread(appax_file* en, appax_file* fr, std::ofstream* file
+void do_in_thread(appax_file* en, appax_file* inverse_fr, std::ofstream* file
       , str_v_t::iterator ite_b, str_v_t::iterator ite_e) {
    int cpt = 1;
    std::list<int> max(10, 0);
@@ -39,24 +39,31 @@ void do_in_thread(appax_file* en, appax_file* fr, std::ofstream* file
    for (str_v_t::iterator it = ite_b; it < ite_e; ++it) {
       if((++cpt) % 100 == 0)
          std::cout << "from: " << std::this_thread::get_id() << " -> " << cpt++ << std::endl;
+      std::map<std::string, int> scorePerFileFr;
       max = std::list<int>(10, 0);
       save_fr = std::list<std::string>(10, "");
-      for (auto const& v : *fr) {
-         int score = nb_common(&(v.second), &((*en)[*it]));
-         std::list<std::string>::iterator itSave = save_fr.begin();
-         for(auto itMax = max.begin(); itMax != max.end(); ++itMax)
+      for (auto const& v : (*en)[*it]) {
+         for (auto const& ffr : (*inverse_fr)[v])
          {
-            if(score > 0 && score > *itMax)
-            {
-               max.insert(itMax, score);
-               save_fr.insert(itSave, v.first);
+            scorePerFileFr[ffr] += 1;
+            int score = scorePerFileFr[ffr];
+            
+             std::list<std::string>::iterator itSave = save_fr.begin();
+             for(auto itMax = max.begin(); itMax != max.end(); ++itMax)
+             {
+                if(score > 0 && score > *itMax)
+                {
+                   max.insert(itMax, score);
+                   save_fr.insert(itSave, ffr);
 
-               max.pop_back();
-               save_fr.pop_back();
-               break;
-            }
+                   max.pop_back();
+                   save_fr.pop_back();
+                   break;
+                }
 
-            ++itSave;
+                ++itSave;
+             }
+
          }
       }
       sher.lock();
@@ -76,7 +83,7 @@ void do_in_thread(appax_file* en, appax_file* fr, std::ofstream* file
 
 int main(int argc, char** argv) {   
    // read files
-   appax_file fr;
+   appax_file inverse_fr;
    appax_file en;
 
    str_v_t en_filename;
@@ -94,19 +101,18 @@ int main(int argc, char** argv) {
    while (std::getline(file_fr, line)) {
       // get filename
       int pos = line.find_first_of(";");
-      std::string doc = line.substr(0, pos);
+      std::string word = line.substr(0, pos);
       // get other
       std::string other = line.substr(pos+1, line.size());
-      std::istringstream iss(line, std::istringstream::in);
+      std::istringstream iss(other, std::istringstream::in);
 
       std::string w;
       while (iss >> w) {
-         fr[doc].insert(w);
+         inverse_fr[word].insert(w);
       }
    }
    file_fr.close();
    // }}}
-
    std::cout << "en" << std::endl;
    // {{{ EN
    std::ifstream file_en(argv[2]);
@@ -141,7 +147,7 @@ int main(int argc, char** argv) {
    int ret = system("mkdir save/");
    std::ofstream file("save/appariements_fr-en.txt");
    for (auto k = 0; k < nb_thread; ++k) {
-      threads.push_back(std::thread(do_in_thread, &en, &fr, &file
+      threads.push_back(std::thread(do_in_thread, &en, &inverse_fr, &file
                , en_filename.begin()+(k*per_parts)
                ,(k == nb_thread-1 ? en_filename.end() 
                   : en_filename.begin()+((k+1)*per_parts))));

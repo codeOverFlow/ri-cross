@@ -61,7 +61,7 @@ void read_dir(char* dirname) {
       std::string name = std::string(pdir->d_name);
       //std::cout << name << std::endl;
       //std::cout << "\tRead the file: " << name << std::endl;
-      m[name] = appax_set();
+      //m[name] = appax_set();
       std::ifstream file(dirname + name);
       std::string a;
 
@@ -69,22 +69,25 @@ void read_dir(char* dirname) {
       std::set<std::string> trash;
 
       // store the map of the file in a pointer
-      appax_set* ptmp = &m[name];
+      //appax_set* ptmp = &m[name];
 
       while (file >> a) {
          // make it lowercase
          std::transform(a.begin(), a.end(), a.begin(), ::tolower);
 
          // erase  and save in trash if occurs at least twice
-			if (a.size() > 3) {
-         	if (ptmp->find(a) != ptmp->end()) {
-            	ptmp->erase(a);
-            	trash.insert(a);
-         	}
-         	else {
-           		ptmp->insert(a);
-         	}
-			}
+		    if (a.size() > 3) {
+		        if (m.find(a) == m.end())
+		          m[a] = appax_set();
+		        appax_set* ptmp = &m[a];
+           	if (ptmp->find(name) != ptmp->end()) {
+              	ptmp->erase(name);
+              	trash.insert(name);
+           	}
+           	else {
+             		ptmp->insert(name);
+           	}
+		    }
       }
    }
 
