@@ -8,8 +8,8 @@
 #include <dirent.h>
 #include <cstring>
 
-void save_map(appax_file& map) {
-   std::ofstream save_file (std::string("save/inverse_appax_per_file_fr")
+void save_map(appax_file& map, char* resname) {
+   std::ofstream save_file (std::string(resname)
          + std::string(".txt"));
 
    save_file << map.size() << std::endl;
@@ -22,7 +22,7 @@ void save_map(appax_file& map) {
    save_file.close();
 }
 
-void read_dir(char* filename) {
+void read_dir(char* filename, char* resname) {
    // create the map
    appax_file m;
 
@@ -78,16 +78,16 @@ void read_dir(char* filename) {
 
    // save the map
    std::cout << std::endl << "Save the map" << std::endl;
-   save_map(m);
+   save_map(m, resname);
 }
 
 int main(int argc, char** argv) {
-   if (argc < 2) {
-      std::cerr << "[ERR] Give the data dir path" << std::endl;
+   if (argc < 3) {
+      std::cerr << "[ERR] Give the data file path and the res file path" << std::endl;
       return EXIT_FAILURE;
    }
    
-   read_dir(argv[1]);
+   read_dir(argv[1], argv[2]);
 
    return EXIT_SUCCESS;
 }

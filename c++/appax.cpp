@@ -20,11 +20,11 @@ void print_map(appax_file const& map) {
    std::cout << std::endl << std::endl;
 }
 
-void save_map(appax_file& map, char* dirname) {
+void save_map(appax_file& map, char* dirname, std::string type) {
    std::string dn(dirname);
    dn = dn.substr(dn.size() - 3, 2);
-   std::ofstream save_file (std::string("save/appax_per_file_") + dn 
-         + std::string(".txt"));
+   std::ofstream save_file (std::string("save/") + type + 
+	std::string("appax_per_file_") + dn + std::string(".txt"));
 
    save_file << map.size() << std::endl;
    for (auto const& kv : map) {
@@ -34,15 +34,12 @@ void save_map(appax_file& map, char* dirname) {
       save_file << std::endl;
    }
    save_file.close();
-
-
-   // serialize it
-   std::string name(std::string("save/") + dn + std::string(".bin"));
 }
 
 void read_dir(char* dirname) {
    // create the map
    appax_file m;
+   //appax_file m_inverse;
 
    // open the dir
    DIR* dir;
@@ -61,15 +58,12 @@ void read_dir(char* dirname) {
       std::string name = std::string(pdir->d_name);
       //std::cout << name << std::endl;
       //std::cout << "\tRead the file: " << name << std::endl;
-      //m[name] = appax_set();
+      m[name] = appax_set();
       std::ifstream file(dirname + name);
       std::string a;
 
-      // create the trash
-      std::set<std::string> trash;
-
       // store the map of the file in a pointer
-      //appax_set* ptmp = &m[name];
+      appax_set* ptmp = &m[name];
 
       while (file >> a) {
          // make it lowercase
@@ -77,23 +71,31 @@ void read_dir(char* dirname) {
 
          // erase  and save in trash if occurs at least twice
 		    if (a.size() > 3) {
-		        if (m.find(a) == m.end())
-		          m[a] = appax_set();
-		        appax_set* ptmp = &m[a];
-           	if (ptmp->find(name) != ptmp->end()) {
-              	ptmp->erase(name);
-              	trash.insert(name);
+			if (ptmp->find(a) != ptmp->end()) {
+			  ptmp->erase(a);
+			}
+			else
+			{
+			  ptmp->insert(a);
+			}
+
+		        /*if (m_inverse.find(a) == m_inverse.end())
+		          m_inverse[a] = appax_set();
+		        appax_set* ptmp_inverse = &m_inverse[a];
+           	if (ptmp_inverse->find(name) != ptmp_inverse->end()) {
+              	ptmp_inverse->erase(name);
            	}
            	else {
-             		ptmp->insert(name);
-           	}
+             		ptmp_inverse->insert(name);
+           	}*/
 		    }
       }
    }
 
    // save the map
    std::cout << std::endl << "Save the map" << std::endl;
-   save_map(m, dirname);
+   save_map(m, dirname, "");
+   //save_map(m_inverse, dirname, "inverse_");
 }
 
 int main(int argc, char** argv) {

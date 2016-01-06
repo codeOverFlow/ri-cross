@@ -47,22 +47,38 @@ void do_in_thread(appax_file* en, appax_file* inverse_fr, std::ofstream* file
          {
             scorePerFileFr[ffr] += 1;
             int score = scorePerFileFr[ffr];
-            
+	    if(score > 0)
+	    {
              std::list<std::string>::iterator itSave = save_fr.begin();
-             for(auto itMax = max.begin(); itMax != max.end(); ++itMax)
+    	     std::list<int>::iterator itMin = max.begin();
+	     std::list<int>::iterator itParcoursMax = max.begin();
+
+	     bool find = false;
+             for(auto it = save_fr.begin(); it != save_fr.end(); ++it)
              {
-                if(score > 0 && score > *itMax)
+		if(*it == ffr)
+		{
+		  (*itParcoursMax)++;
+                  find = true;
+		  break;
+		}
+
+                if(*itMin > *itParcoursMax)
                 {
-                   max.insert(itMax, score);
-                   save_fr.insert(itSave, ffr);
+		   itMin = itParcoursMax;
+		   itSave = it;
+		}
 
-                   max.pop_back();
-                   save_fr.pop_back();
-                   break;
-                }
+		++itParcoursMax;
 
-                ++itSave;
+	     }
+
+	     if(!find && score > *itMin)
+	     {
+		*itMin = score;
+		*itSave = ffr;
              }
+	   }
 
          }
       }
