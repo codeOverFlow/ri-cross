@@ -31,11 +31,13 @@ Le nombre de thread permet de paralléliser la tâche.
 
 Créer les dossiers c++/save/res et c++/save/score
 
-### Convertir au format pour trec_eval (le top permet de proposer plusieurs appariements pour un même fichier, maximum 10)
+### Convertir au format pour trec_eval 
+
+Le top permet de proposer plusieurs appariements pour un même fichier, maximum 10)
 
 Pour le sens fr vers en :
 
-`̀̀`̀ 
+```
 python convertFormat.py FICHIER_APPARIEMENTS NOM_RUN TOP inverse > c++/save/res/appariements_fr_vers_en_top[TOP].format
 ```
 
