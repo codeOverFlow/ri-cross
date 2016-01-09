@@ -53,10 +53,10 @@ Les résultats complets des évaluations sont stockés dans c++/save/score
 
 Nécessite de placer le dossier trec_eval à la racine du projet
 
-``̀ 
+```
 ./eval.sh 
 ./affiche.sh
-``̀
+```
 
 ## Pour faire l'intersection
 
